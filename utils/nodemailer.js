@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 // const smtpTransport = require("nodemailer-smtp-transport");
 
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -8,6 +9,7 @@ const transporter = nodemailer.createTransport({
     pass: "xmck kvgv unsz vccw",
   },
 });
+
 
 exports.sendOtpMail = async (otp) => {
   try {

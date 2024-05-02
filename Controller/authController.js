@@ -1,6 +1,4 @@
-
 const nodemailer = require("nodemailer");
-
 
 // exports.signup= async (req,res)=>{
 //     try{
@@ -109,14 +107,13 @@ const bcrypt = require("bcrypt");
 const { sendOtpMail } = require("../utils/nodemailer");
 
 
+
 exports.signup = async (req, res) => {
   try {
     const { email, name, password } = req.body;
-       console.log(email,name,password)
+    console.log(email, name, password);
     if (email && name && password) {
       const hashPassword = bcrypt.hashSync(password, 12);
-      // const token = jwt.sign(username || email, process.env.SECRET_KEY);
-       
       const newUser = new User({
         name: name,
         email: email,
@@ -124,9 +121,8 @@ exports.signup = async (req, res) => {
       });
 
       await newUser.save();
-      return  res.redirect('/api/v2/login',{message:" Signup Successfully "});
+      // return res.redirect('/api/v2/login');
 
-      // console.log(req.flash())
       return res.status(200).json({
         status: "success",
         message: "Signup Successfully",
@@ -142,59 +138,69 @@ exports.signup = async (req, res) => {
   }
 };
 
-exports.login = async (req,res) => {
+
+
+exports.login = async (req, res) => {
   const { name, password } = req.body;
-  console.log(name,password,"dddd")
+  console.log(name, password, "dddd");
   try {
-
     if (name && password) {
+      const existUser = await User.find({
+        $or: [{ email: name }, { name: name }],
+      });
 
-      const existUser = await User.find({$or:[{email:name},{name:name}]});
-      // console.log(existUser,"gggggg")
       if (!existUser) {
         return res.status(400).json({ message: "document is not found" });
-      }
-      else{
-        
-          const userid= existUser[0]._id.toString()
-          const token=jwt.sign(userid,process.env.SECRET_KEY);
-           console.log(token,"jjjjjjjj")
-              if(!token){
-                return res.status(400).json({message:"User token is generator "})
-              }
-              else{
-                  console.log(bcrypt.compareSync(password,existUser[0].password),"kk")
-                   if(((name===existUser[0].email)||(name===existUser[0].name))  ||  bcrypt.compareSync(password,existUser[0].password))
-                   {
-                    console.log(name)
-                    const user= await User.aggregate([{$count:"name"}])
-                    const user2=await User.find({}).sort({createdAt:-1}).limit(5);
-                       return res.render("dashbord",{email:'lasan',count:user[0].name,users:user2,toggleValue:"ON"});
-                      //  return res.status(200).json({
-                      //   status:"Success",
-                      //   message:"Successfully Logging",
-                      //    data:{
-                      //       token:token,
-                      //        user:existUser
-                      //    }
+      } else {
+        const userid = existUser[0]._id.toString();
+        const token = jwt.sign(userid, process.env.SECRET_KEY);
+        console.log(token, "jjjjjjjj");
+        if (!token) {
+          return res.status(400).json({ message: "User token is generator " });
+        } else {
+          console.log(
+            bcrypt.compareSync(password, existUser[0].password),
+            "kk"
+          );
+          if (
+            (name === existUser[0].email || name === existUser[0].name) &&
+            bcrypt.compareSync(password, existUser[0].password)
+          ) {
+            console.log(name);
+      
+            return res.redirect('/api/v1/dashbord')
+            // return res.render("dashbord", {
+            //   email: "lasan",
+            //   count: user[0].name,
+            //   users: user2,
+            //   toggleValue: "ON",
+            // });
+             return res.status(200).json({
+              status:"Success",
+              message:"Successfully Logging",
+               data:{
+                  token:token,
+                   user:existUser
+               }
 
-                      //  })
-                   }
-              }
-           
-        } 
+             })
+          }
+        }
       }
-      // next()
+    }
+    // next()
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
 
+
+
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email: email });
+     const user = await User.findOne({ email: email });
 
     if (!user) {
       return res
@@ -218,6 +224,9 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
+
+
+
 exports.resetPassword = async (req, res) => {
   try {
     const { otp, newpassword } = req.body;
@@ -231,16 +240,16 @@ exports.resetPassword = async (req, res) => {
     if (!user || user.otpExpiration < Date.now()) {
       return res.status(400).json("Invalid OTP");
     }
-    
-    const salt= bcrypt.genSalt(10);
-    console.log(salt)
+
+    const salt = bcrypt.genSalt(10);
+    console.log(salt);
     const hashedPassword = await bcrypt.hash(newpassword, salt);
-    
+
     user.password = hashedPassword;
     user.otp = null;
     user.otpExpiration = null;
     await user.save();
-    return res.redirect('/')
+    return res.redirect("/");
     return res.json({
       data: "Password reset successful",
     });
@@ -248,5 +257,3 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-

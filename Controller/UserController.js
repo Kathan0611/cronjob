@@ -1,7 +1,12 @@
+const products = require("../model/ProductModel");
+const sequelize=require('./../dbconfig/db')
 const User = require("./../model/UserModel");
-const Product = require("../model/ProductModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const cron = require('node-cron');
+const Product = require("../model/ProductModel");
+const CronJob=require('./../model/CronJobModel')
+
 
 
 //create User
@@ -11,6 +16,9 @@ exports.createUser = async (req, res) => {
 
     if (!name || !email || !password) {
       req.flash()
+      
+      
+      
       return res.staus(204).json({
         message: "fill required filed ",
         data: {
@@ -18,20 +26,37 @@ exports.createUser = async (req, res) => {
         },
       });
     }
-
+    const existUser=  await User.findOne({email:email});
+     if(existUser){
+        return res.status(400).json({message:"Updated Username"})
+     }
     const hashPassword = bcrypt.hashSync(password, 12);
     const user = new User({ name: name, email: email, password: hashPassword });
     await user.save();
-    return res.status(201).json({
-      data: {
-        status: "Success",
-        User: user,
-      },
-    });
+    function logMessage() {
+         console.log('Cron job executed at:',res.status(201).json({
+          data: {
+         status: "Success",
+         User: user,
+        },
+        }));
+           }
+           cron.schedule('*/10 * * * * *', () => {
+            logMessage();
+             });
+
+    // return res.status(201).json({
+    //   data: {
+    //     status: "Success",
+    //     User: user,
+    //   },
+    // });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
+
+
 
 //getTop5 User
 exports.get5document = async (req, res) => {
@@ -40,7 +65,7 @@ exports.get5document = async (req, res) => {
     if (!token) {
       return res.status(401).json({ message: "Token is missing in headers" });
     }
-
+    
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
     console.log(decoded);
     const userId = decoded;
@@ -50,7 +75,7 @@ exports.get5document = async (req, res) => {
         message: "document not found",
       });
     }
-
+    
     return res.status(200).json({
       data: {
         staus: "Success",
@@ -85,7 +110,7 @@ exports.singleUser = async (req, res) => {
           message: "document not found",
         });
       }
-
+      
       return res.status(200).json({
         data: {
           staus: "Success",
@@ -112,7 +137,7 @@ exports.upadateUser = async (req, res) => {
     if (!token) {
       return res.status(401).json({ message: "Token is missing in headers" });
     }
-
+    
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
     console.log(decoded);
     if (decoded === id) {
@@ -157,7 +182,7 @@ exports.deleteUser = async (req, res) => {
     console.log(decoded);
     if (decoded === id) {
       const deleteUser = await User.findByIdAndDelete(id);
-
+      
       if (!deleteUser) {
         res.status(404).json({ message: "document is not found" });
       }
@@ -180,15 +205,32 @@ exports.deleteUser = async (req, res) => {
 
 
 //dashbord
+
 exports.dashbord = async (req, res) => {
   try {
-    const user = await User.aggregate([{ $count: "name" }]);
+    const { connectToMongo, connectToSqlite, currentDb } = require('./../dbconfig/db'); 
+    const toggleValue=req.query.toggleValue;
+    if(toggleValue=="ON"){
+      const currentDb= await connectToMongo('mongodb://localhost:27017/toggle');
+      const user = await User.aggregate([{ $count: "name" }]);
+           const user2 = await User.find({}).sort({ createdAt: -1 }).limit(5);
+    
 
-    if (!user) {
-      res.status(404).json({ message: "User document Not Found " });
+
+        if (!user) {
+        return  res.status(404).json({ message: "User document Not Found " });
+      }
+      return  res.render("dashbord", { email:"kathan", count: user[0].name,users:user2, user_active:1});
+      
     }
-    res.render("dashbord", { count: user[0].name },{toggle:'OFF'});
-    //  })
+    else{
+      const  currentDb=  await connectToSqlite('database.sqlite');
+      const count=await products.count();
+      const product = await products.findAll({ order: [['createdAt', 'DESC']], limit: 5});
+      return res.render("dashbord",{email:"kathan",count:count,users:product,user_active:1})
+    }
+
+    
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -198,10 +240,18 @@ exports.dashbord = async (req, res) => {
 //getAll product for sequelize
 exports.getAllProduct = async (req, res) => {
   try {
-    const products = await Product.findAll();
+  
+    const cronjob= await CronJob.findAll()
+    console.log(cronjob);
+    const product = await products.findAll(
+      {
+        order: [['createdAt', 'DESC']],
+        limit: 5
+      }
+    );
     return res.status(200).json({
       data: {
-        products,
+        product,
       },
     });
   } catch (error) {
@@ -213,13 +263,13 @@ exports.getAllProduct = async (req, res) => {
   }
 };
 
+
 //create Product
 exports.createProduct=async (req,res)=>{
-    try{
-   
-        // const{name,price,description}=req.body;
+  try{
+    console.log(req.body)
+    const product= await products.create(req.body);
 
-        const product= await Product.create(req.body);
 
         return res.status(200).json({
             data:{
@@ -236,3 +286,44 @@ exports.createProduct=async (req,res)=>{
         })
     }
 }
+
+
+exports.cronJob = async (req, res) => {
+  let { jobName, schedule, command } = req.body;
+
+  // Validate the API request.
+  if (!jobName || !schedule || !command) {
+    return res.status(400).send('Invalid API request.');
+  }
+
+  // Define the command function
+  // command = () => {
+  //   // Your function or code to execute
+  //   console.log('Cron job executed.');
+  // };
+
+  // Create the cron job.
+  const job = cron.schedule(schedule, ()=>{
+    console.log("Cron job executed.")
+  }, {
+    jobName,
+  });
+
+  // Start the cron job.
+  job.start();
+
+  try {
+    // Create a record in the database
+    await CronJob.create({
+      jobName,
+      schedule,
+      command // Store the command function as a string in the database
+    });
+    // console.log(newCronJob)
+    // Respond to the API request.
+    return res.status(200).send('Cron job created successfully.');
+  } catch (error) {
+    console.error('Error creating cron job:', error.message);
+    return res.status(500).send('Internal Server Error');
+  }
+};

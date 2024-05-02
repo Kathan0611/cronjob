@@ -3,14 +3,17 @@ body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
+
 a {
   color: #00B7FF;
 }
+
 
 .wrapper {
   margin-top: 80px;
   margin-bottom: 20px;
 }
+
 
 .form-signin {
   max-width: 420px;
@@ -20,10 +23,12 @@ a {
   border: 3px dotted rgba(0,0,0,0.1);
 }
 
+
 .form-signin-heading {
   text-align:center;
   margin-bottom: 30px;
 }
+
 
 .form-control {
   position: relative;
@@ -32,17 +37,20 @@ a {
   padding: 10px;
 }
 
+
 input[type="text"] {
   margin-bottom: 0px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
 
+
 input[type="email"] {
   margin-bottom: 0px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
+
 
 
 input[type="password"] {
@@ -54,6 +62,7 @@ input[type="password"] {
 /* dashboard.css */
 
 /* Body styles */
+
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -75,8 +84,15 @@ h1:nth-of-type(1) {
 h1:nth-of-type(2) {
   color: #666; /* Medium grey */
 }
+.margin {
+    padding: auto;
+    margin:1000px;
+}
 
-/* Responsive styles */
+
+
+
+ /* Responsive styles */
 @media screen and (max-width: 768px) {
   /* Adjust styles for smaller screens */
   h1 {

@@ -17,19 +17,23 @@ const registerSchema = Joi.object({
     password: Joi.string().required().min(3),
 });
 
+
 const loginSchema = Joi.object({
     name: Joi.string().optional(),
     email: Joi.string().email().optional(),
     password: Joi.string().required().min(3),
 });
 
+
 const forgotSchema =Joi.object({
      email: Joi.string().email().required(),
 })
 
+
 const resetSchema =Joi.object({
      newpassword:Joi.string().email().required()
 })
+
 module.exports = {
     // validateRequest,
     registerSchema,

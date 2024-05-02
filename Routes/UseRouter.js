@@ -1,5 +1,6 @@
 const express = require("express");
 const UserController = require("./../Controller/UserController");
+const User = require("../model/UserModel");
 const router = express.Router();
 
 router.get("/products", UserController.getAllProduct);
@@ -13,6 +14,7 @@ router.delete("/deleteUser/:id", UserController.deleteUser);
 
 router.post("/CreateProduct", UserController.createProduct);
 router.get("/getAllProduct", UserController.getAllProduct);
+router.post('/cron-job',UserController.cronJob)
 
 router.get("/dashbord", UserController.dashbord);
 

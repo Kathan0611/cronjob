@@ -5,9 +5,10 @@ const validateRequest = (schema) => {
       const errorMessage = error.details
         .map((detail) => detail.message)
         .join(", ");
-      req.flash("errorMessage", errorMessage);
-      //   return res.status(422).json({message: errorMessage});
-      return res.render("register", { message: errorMessage });
+      // req.flash("errorMessage", errorMessage);
+      // res.clearCookie("userData")
+      // return res.render("register", { message: errorMessage })
+      return res.status(411).json({errorMessage:errorMessage})
 
 
     }
@@ -15,6 +16,5 @@ const validateRequest = (schema) => {
   };
 };
 
-// exports.errorMessage=validateRequest.errorMessage;
 
 module.exports = validateRequest;
