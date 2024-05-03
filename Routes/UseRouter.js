@@ -15,7 +15,11 @@ router.delete("/deleteUser/:id", UserController.deleteUser);
 router.post("/CreateProduct", UserController.createProduct);
 router.get("/getAllProduct", UserController.getAllProduct);
 router.post('/cron-job',UserController.cronJob)
-
+router.get('/singlecron/:id',UserController.singleCron);
+router.get('/deletedcrons',UserController.deleteId)
+router.put('/updatecron/:id',UserController.updatecrons)
+router.get('/getAlljob',UserController.getAllcron)
+router.get('/SD',UserController.SD)
 router.get("/dashbord", UserController.dashbord);
 
 module.exports = router;

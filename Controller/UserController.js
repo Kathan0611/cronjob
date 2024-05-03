@@ -4,6 +4,7 @@ const User = require("./../model/UserModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const cron = require('node-cron');
+const schedule=require('node-schedule');
 const Product = require("../model/ProductModel");
 const CronJob=require('./../model/CronJobModel')
 
@@ -290,25 +291,27 @@ exports.createProduct=async (req,res)=>{
 
 exports.cronJob = async (req, res) => {
   let { jobName, schedule, command } = req.body;
-
+    console.log(jobName)
   // Validate the API request.
   if (!jobName || !schedule || !command) {
     return res.status(400).send('Invalid API request.');
   }
 
-  // Define the command function
-  // command = () => {
-  //   // Your function or code to execute
-  //   console.log('Cron job executed.');
-  // };
-
+  const startTime= new Date(Date.now());
+  const minutes = startTime.getMinutes()+1
+  // const startTime1= startTime
+  // const minutes1 = minutes
+  
   // Create the cron job.
   const job = cron.schedule(schedule, ()=>{
-    console.log("Cron job executed.")
+       console.log(startTime.getMinutes()+1, minutes)
+
+         if(minutes > startTime.getMinutes())
+             console.log('cron job execution',`${startTime.getMinutes()+1}`)
   }, {
     jobName,
   });
-
+  
   // Start the cron job.
   job.start();
 
@@ -327,3 +330,97 @@ exports.cronJob = async (req, res) => {
     return res.status(500).send('Internal Server Error');
   }
 };
+
+exports.singleCron= async (req,res)=>{
+  try{
+    
+     const{id}=req.params;
+     const cron= await CronJob.findOne({id:id});
+     return res.status(200).json({
+      status:"success",
+      message:"Successfully get cron",
+      data:{
+        cron
+      }
+     })
+   }
+   catch(error){
+    return res.status(500).json({message:err.message})
+   }
+
+   
+
+   
+}
+
+exports.deleteId= async (req,res)=>{
+  try{
+     let {id}=req.params;
+    const deleltedcrons= await CronJob.destroy();
+
+    return res.status(200).json({
+      status:"Success",
+      message:"Successfully deleted",
+      data:{
+        deleltedcrons
+      }
+    })
+
+  }
+  catch(error){
+    return res.status(500).json({message:err.message})
+  }
+
+  
+}
+
+exports.updatecrons= async (req,res)=>{
+      try{
+           const {id}=req.params;
+          const upadated= await CronJob.upsert({id:id,...req.body})
+
+          return res.status(200).json({
+            status:"Success",
+            message:"Successfully updatedData",
+            data:{
+             upadated:upadated[0]
+            } 
+          })
+      }
+      catch(err){
+        return res.status(500).json({message:err.message
+        })
+      }
+}
+
+exports.getAllcron = async (req,res)=>{
+  
+  try{
+      const crons= await CronJob.findAll();
+      return res.status(200).json({
+        status:"success",
+        message:"successfully getAllcrons",
+        data:{
+          crons:crons
+        }
+      })
+  }
+  catch(err){
+    return res.status(500).json({message:err.message})
+  }
+}
+
+
+exports.SD= async (req,res)=>{
+  try{
+const startTime = new Date(Date.now() +2000);
+const endTime = new Date(startTime.getTime() + 50000);
+const job = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/10 * * * * *' }, function(){
+  console.log('Time for tea!',"Hanumanji********");
+  
+});
+  }
+  catch(err){
+    return res.status(500).json({message:err.message})
+  }
+}
